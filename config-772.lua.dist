@@ -79,6 +79,7 @@ emoteSpells = false
 classicEquipmentSlots = false
 classicAttackSpeed = false
 showScriptsLogInConsole = true
+showPlayerLogInConsole = true
 showOnlineStatusInCharlist = false
 yellMinimumLevel = 2
 yellAlwaysAllowPremium = false
