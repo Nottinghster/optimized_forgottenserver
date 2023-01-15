@@ -467,6 +467,9 @@ void Creature::onCreatureMove(Creature* creature, const Tile* newTile, const Pos
 			} else if (Position::getDistanceX(newPos, oldPos) >= 1 && Position::getDistanceY(newPos, oldPos) >= 1) {
 				//diagonal extra cost
 				lastStepCost = 3;
+				if (getPlayer()) {
+					lastStepCost -= 1;
+				}				
 			}
 		} else {
 			stopEventWalk();
@@ -1374,9 +1377,6 @@ int64_t Creature::getStepDuration() const
 	#else
 	uint32_t groundSpeed;
 	int32_t stepSpeed = getStepSpeed();
-	if (!stepSpeed) {
-		stepSpeed = 250;
-	}
 
 	Item* ground = tile->getGround();
 	if (ground) {
@@ -1388,8 +1388,13 @@ int64_t Creature::getStepDuration() const
 		groundSpeed = 150;
 	}
 
-	int64_t stepDuration = 1000 * groundSpeed / stepSpeed;
-	stepDuration = ((stepDuration + SERVER_BEAT_MILISECONDS - 1) / SERVER_BEAT_MILISECONDS) * SERVER_BEAT_MILISECONDS;
+	double duration = std::floor(1000 * groundSpeed) / stepSpeed;
+	int64_t stepDuration = std::ceil(duration / SERVER_BEAT_MILISECONDS) * SERVER_BEAT_MILISECONDS;
+
+	const Monster* monster = getMonster();
+	if (monster && monster->isTargetNearby() && !monster->isFleeing() && !monster->getMaster()) {
+		stepDuration *= 3;
+	}
 
 	return stepDuration;
 	#endif
