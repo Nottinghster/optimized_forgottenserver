@@ -25,6 +25,8 @@
 #include "configmanager.h"
 #include "game.h"
 
+#include <fmt/format.h>
+
 extern ConfigManager g_config;
 extern Game g_game;
 
@@ -287,7 +289,7 @@ bool IOLoginData::preloadPlayer(Player* player, const std::string& name)
 bool IOLoginData::loadPlayerById(Player* player, uint32_t id)
 {
 	std::stringExtended query(1024);
-	query << "SELECT `id`, `name`, `account_id`, `group_id`, `sex`, `vocation`, `experience`, `level`, `maglevel`, `health`, `healthmax`, `blessings`, `mana`, `manamax`, `manaspent`, `soul`, `lookbody`, `lookfeet`, `lookhead`, `looklegs`, `looktype`, `lookaddons`, `lookmountbody`, `lookmountfeet`, `lookmounthead`, `lookmountlegs`, `posx`, `posy`, `posz`, `cap`, `lastlogin`, `lastlogout`, `lastip`, `conditions`, `spells`, `storages`, `skulltime`, `skull`, `town_id`, `balance`, `offlinetraining_time`, `offlinetraining_skill`, `stamina`, `skill_fist`, `skill_fist_tries`, `skill_club`, `skill_club_tries`, `skill_sword`, `skill_sword_tries`, `skill_axe`, `skill_axe_tries`, `skill_dist`, `skill_dist_tries`, `skill_shielding`, `skill_shielding_tries`, `skill_fishing`, `skill_fishing_tries`, `direction` FROM `players` WHERE `id` = " << id << " LIMIT 1";
+	query << "SELECT `id`, `name`, `account_id`, `group_id`, `sex`, `vocation`, `experience`, `level`, `maglevel`, `health`, `healthmax`, `blessings`, `mana`, `manamax`, `manaspent`, `soul`, `lookbody`, `lookfeet`, `lookhead`, `looklegs`, `looktype`, `lookaddons`, `lookmountbody`, `lookmountfeet`, `lookmounthead`, `lookmountlegs`, `posx`, `posy`, `posz`, `cap`, `lastlogin`, `lastlogout`, `lastip`, `conditions`, `spells`, `skulltime`, `skull`, `town_id`, `balance`, `offlinetraining_time`, `offlinetraining_skill`, `stamina`, `skill_fist`, `skill_fist_tries`, `skill_club`, `skill_club_tries`, `skill_sword`, `skill_sword_tries`, `skill_axe`, `skill_axe_tries`, `skill_dist`, `skill_dist_tries`, `skill_shielding`, `skill_shielding_tries`, `skill_fishing`, `skill_fishing_tries`, `direction` FROM `players` WHERE `id` = " << id << " LIMIT 1";
 	return loadPlayer(player, g_database.storeQuery(query));
 }
 
@@ -295,7 +297,7 @@ bool IOLoginData::loadPlayerByName(Player* player, const std::string& name)
 {
 	const std::string& escapedName = g_database.escapeString(name);
 	std::stringExtended query(escapedName.length() + static_cast<size_t>(1024));
-	query << "SELECT `id`, `name`, `account_id`, `group_id`, `sex`, `vocation`, `experience`, `level`, `maglevel`, `health`, `healthmax`, `blessings`, `mana`, `manamax`, `manaspent`, `soul`, `lookbody`, `lookfeet`, `lookhead`, `looklegs`, `looktype`, `lookaddons`, `lookmountbody`, `lookmountfeet`, `lookmounthead`, `lookmountlegs`, `posx`, `posy`, `posz`, `cap`, `lastlogin`, `lastlogout`, `lastip`, `conditions`, `spells`, `storages`, `skulltime`, `skull`, `town_id`, `balance`, `offlinetraining_time`, `offlinetraining_skill`, `stamina`, `skill_fist`, `skill_fist_tries`, `skill_club`, `skill_club_tries`, `skill_sword`, `skill_sword_tries`, `skill_axe`, `skill_axe_tries`, `skill_dist`, `skill_dist_tries`, `skill_shielding`, `skill_shielding_tries`, `skill_fishing`, `skill_fishing_tries`, `direction` FROM `players` WHERE `name` = " << escapedName << " LIMIT 1";
+	query << "SELECT `id`, `name`, `account_id`, `group_id`, `sex`, `vocation`, `experience`, `level`, `maglevel`, `health`, `healthmax`, `blessings`, `mana`, `manamax`, `manaspent`, `soul`, `lookbody`, `lookfeet`, `lookhead`, `looklegs`, `looktype`, `lookaddons`, `lookmountbody`, `lookmountfeet`, `lookmounthead`, `lookmountlegs`, `posx`, `posy`, `posz`, `cap`, `lastlogin`, `lastlogout`, `lastip`, `conditions`, `spells`, `skulltime`, `skull`, `town_id`, `balance`, `offlinetraining_time`, `offlinetraining_skill`, `stamina`, `skill_fist`, `skill_fist_tries`, `skill_club`, `skill_club_tries`, `skill_sword`, `skill_sword_tries`, `skill_axe`, `skill_axe_tries`, `skill_dist`, `skill_dist_tries`, `skill_shielding`, `skill_shielding_tries`, `skill_fishing`, `skill_fishing_tries`, `direction` FROM `players` WHERE `name` = " << escapedName << " LIMIT 1";
 	return loadPlayer(player, g_database.storeQuery(query));
 }
 
@@ -442,21 +444,6 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	std::string spell;
 	while (propStream.readString(spell)) {
 		player->learnedInstantSpellList.emplace(spell);
-	}
-
-	//load storage map
-	attr = result->getStream("storages", attrSize);
-	propStream.init(attr, attrSize);
-
-	size_t storage_sizes;
-	if (propStream.read<size_t>(storage_sizes)) {
-		player->storageMap.reserve(storage_sizes);
-
-		uint32_t storage_key;
-		int32_t storage_value;
-		while (propStream.read<uint32_t>(storage_key) && propStream.read<int32_t>(storage_value)) {
-			player->addStorageValue(storage_key, storage_value, true);
-		}
 	}
 
 	if (!player->setVocation(result->getNumber<uint16_t>("vocation"), true)) {
@@ -665,6 +652,13 @@ bool IOLoginData::loadPlayer(Player* player, DBResult_ptr result)
 	}
 	#endif
 
+	//load storage map
+	if ((result = g_database.storeQuery(fmt::format("SELECT `key`, `value` FROM `player_storage` WHERE `player_id` = {:d}", player->getGUID())))) {
+		do {
+			player->addStorageValue(result->getNumber<uint32_t>("key"), result->getNumber<int32_t>("value"), true);
+		} while (result->next());
+	}
+
 	//load vip
 	query.clear();
 	query << "SELECT `player_id` FROM `account_viplist` WHERE `account_id` = " << player->getAccount();
@@ -848,22 +842,6 @@ bool IOLoginData::savePlayer(Player* player)
 		query << ",`spells` = NULL";
 	}
 
-	// storages
-	player->genReservedStorageRange();
-	propWriteStream.clear();
-	propWriteStream.write<size_t>(player->storageMap.size());
-	for (const auto& it : player->storageMap) {
-		propWriteStream.write<uint32_t>(it.first);
-		propWriteStream.write<int32_t>(it.second);
-	}
-
-	attributes = propWriteStream.getStream(attributesSize);
-	if (attributesSize > 0) {
-		query << ",`storages` = " << g_database.escapeBlob(attributes, attributesSize);
-	} else {
-		query << ",`storages` = NULL";
-	}
-
 	if (g_game.getWorldType() != WORLD_TYPE_PVP_ENFORCED) {
 		int64_t skullTime = 0;
 		if (player->skullTicks > 0) {
@@ -1010,6 +988,23 @@ bool IOLoginData::savePlayer(Player* player)
 		return false;
 	}
 	#endif
+
+	if (!g_database.executeQuery(fmt::format("DELETE FROM `player_storage` WHERE `player_id` = {:d}", player->getGUID()))) {
+		return false;
+	}
+
+	DBInsert storageQuery(&g_database, "INSERT INTO `player_storage` (`player_id`, `key`, `value`) VALUES ");
+	player->genReservedStorageRange();
+
+	for (const auto& it : player->storageMap) {
+		if (!storageQuery.addRow(fmt::format("{:d}, {:d}, {:d}", player->getGUID(), it.first, it.second))) {
+			return false;
+		}
+	}
+
+	if (!storageQuery.execute()) {
+		return false;
+	}
 
 	//End the transaction
 	return transaction.commit();
