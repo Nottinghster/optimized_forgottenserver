@@ -1,4 +1,4 @@
-forgottenserver
+Optimized ForgottenServer
 ===============
 
 The Forgotten Server is a free and open-source MMORPG server emulator written in C++. It is a fork of the [OpenTibia Server](https://github.com/opentibia/server) project. To connect to the server, you can use [OTClient](https://github.com/mehah/otclient).
@@ -19,8 +19,3 @@ We use the [issue tracker on GitHub](https://github.com/SaiyansKing/forgottenser
 ### Repository
 
 This repository isn't a simple fork from the main repository because it's conception is to deliver heavily optimization on the project by going to even breaking backward compatiblity if needed.
-
-### Donation
-If you like what I'm doing you can donate me :)
-
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=jakubkubina@hotmail.com&rm=0&currency_code=USD)
