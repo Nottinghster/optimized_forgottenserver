@@ -422,9 +422,10 @@ ReturnValue Actions::internalUseItem(Player* player, const Position& pos, uint8_
 
 		if (bed->trySleep(player)) {
 			player->setBedItem(bed);
-			bed->sleep(player);
 			#if GAME_FEATURE_OFFLINE_TRAINING > 0
 				g_game.sendOfflineTrainingDialog(player);
+			#else
+				bed->sleep(player);
 			#endif
 		}
 
