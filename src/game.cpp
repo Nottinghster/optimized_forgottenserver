@@ -4617,12 +4617,12 @@ bool Game::combatChangeHealth(Creature* attacker, Creature* target, CombatDamage
 			#endif
 
 			TextMessage message;
-			#if CLIENT_VERSION >= 900
+			if (g_config.getBoolean(ConfigManager::SHOW_ANIMATED_HEALING_MANA)) {
 				message.type = MESSAGE_HEALED;
 				message.position = targetPos;
 				message.primary.value = realHealthChange;
 				message.primary.color = TEXTCOLOR_PASTELRED;
-			#endif
+			}
 
 			SpectatorVector spectators;
 			map.getSpectators(spectators, targetPos, false, true);
@@ -4964,11 +4964,11 @@ bool Game::combatChangeMana(Creature* attacker, Creature* target, CombatDamage& 
 
 		if (realManaChange > 0 && !targetPlayer->isInGhostMode()) {
 			TextMessage message(MESSAGE_HEALED, "You gained " + std::to_string(realManaChange) + " mana.");
-			#if CLIENT_VERSION >= 900
+			if (g_config.getBoolean(ConfigManager::SHOW_ANIMATED_HEALING_MANA)) {
 				message.position = target->getPosition();
 				message.primary.value = realManaChange;
 				message.primary.color = TEXTCOLOR_MAYABLUE;
-			#endif
+			}
 			targetPlayer->sendTextMessage(message);
 		}
 	} else {

@@ -47,6 +47,7 @@ class ConfigManager
 			CLASSIC_ATTACK_SPEED,
 			SCRIPTS_CONSOLE_LOGS,
 			PLAYER_CONSOLE_LOGS,
+			SHOW_ANIMATED_HEALING_MANA,
 
 			LAST_BOOLEAN_CONFIG /* this must be the last one */
 		};

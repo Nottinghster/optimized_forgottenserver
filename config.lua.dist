@@ -10,6 +10,7 @@ removeChargesFromRunes = true
 removeChargesFromPotions = false
 removeWeaponAmmunition = false
 removeWeaponCharges = false
+showAnimatedHealingMana = false
 timeToDecreaseFrags = 24 * 60 * 60 * 1000
 whiteSkullTime = 15 * 60 * 1000
 stairJumpExhaustion = 2000
